@@ -1,0 +1,54 @@
+dim fso = CREATEOLEOBJ("Scripting.FileSystemObject")
+for i = 0 to GETOLEITEM(fso.Drives) - 1
+  // ドライブの検索(リムーバブルかつ、制御用画像が存在するか？)
+  dim d = ALL_OLE_ITEM[i]
+  PRINT d.DriveLetter + ": Type " + d.DriveType 
+  IFB d.DriveType = 1 THEN
+    PRINT "found " + d.path
+    dim path = fso.buildPath(fso.buildPath(fso.buildPath(d.path, "DCIM"), "100__TSB"), "FA000001.JPG")
+    PRINT "path " + path
+    IFB fso.FileExists(path) THEN
+      PRINT "file found"
+      // 制御用画像のプロテクト判定
+      dim file = fso.GetFile(path)
+      IFB file.attributes AND $1 = $1 THEN
+        // プロテクトON＝無線OFF
+        SELECT SLCTBOX( SLCT_BTN, 0, "無線はOFFのようです", "ONにする", "OFFのまま(再設定)")
+          CASE SLCT_1
+            file.attributes = file.attributes XOR $1
+            BALLOON("Flash Airの無線をONにしました", 0, 20, 20, 24, "MS ゴシック", $00FF00, $FFFFFF)
+            SLEEP(3)
+            BALLOON()
+            PRINT "Wi-Fi ON"
+          CASE SLCT_2
+            // いったんONにしてOFFにし直す
+            file.attributes = file.attributes XOR $1
+            SLEEP(1)
+            file.attributes = file.attributes OR $1
+            PRINT "Wi-Fi Reset"
+        SELEND
+      ELSE
+        // プロテクトOFF＝無線ON
+        SELECT SLCTBOX( SLCT_BTN, 0, "無線はONのようです", "OFFにする", "ONのまま(再設定)")
+          CASE SLCT_1
+            file.attributes = file.attributes OR $1
+            BALLOON("Flash Airの無線をOFFにしました", 0, 20, 20, 24, "MS ゴシック", $00FF00, $FFFFFF)
+            SLEEP(3)
+            BALLOON()
+            PRINT "Wi-Fi OFF"
+          CASE SLCT_2
+            // いったんOFFにしてONにし直す
+            file.attributes = file.attributes OR $1
+            SLEEP(1)
+            file.attributes = file.attributes XOR $1
+            PRINT "Wi-Fi Reset"
+        SELEND
+      ENDIF
+      // FlashAir二枚差しには非対応です
+      EXIT
+    ELSE
+      PRINT "file not found"
+    ENDIF
+  ENDIF
+next
+
