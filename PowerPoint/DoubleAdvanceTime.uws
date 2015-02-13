@@ -1,0 +1,17 @@
+//
+// 指定ファイル全スライドの「画面切り替え時間」を2倍にする
+//
+
+CALL PPT.uws
+DIM file = PPT.CHOICEPRESENTATION()
+
+IF file = NULL THEN EXIT
+FOR i = 0 TO GETOLEITEM( file.slides ) - 1
+  PRINT "Slide:" + i
+  PRINT "Time:" + ALL_OLE_ITEM[i].slideshowTransition.advanceTime
+  ALL_OLE_ITEM[i].slideshowTransition.advanceTime = ALL_OLE_ITEM[i].slideshowTransition.advanceTime * 2
+NEXT
+
+PRINT "Finished!"
+
+MSGBOX("完了")

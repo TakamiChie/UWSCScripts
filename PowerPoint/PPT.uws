@@ -1,0 +1,74 @@
+//
+// PowerPoint関係の処理を詰め込んだモジュール
+//
+MODULE PPT
+
+  DIM app
+
+  //
+  // コンストラクタ
+  //
+  PROCEDURE PPT()
+    COM_ERR_IGN
+    app = GETACTIVEOLEOBJ( "PowerPoint.Application")
+    COM_ERR_RET    
+    IF COM_ERR_FLG THEN app = NULL
+  FEND
+
+  //
+  // PowerPointオブジェクトを取得する
+  // 戻り値…PowerPoint。開かれていなかった場合NULL
+  //
+  FUNCTION GET()
+    RESULT = app
+  FEND
+
+  //
+  // 開いている全てのPowerPointファイルの中から一つを選択して返す
+  // 戻り値…選択されたPowerPointファイル。
+  //   PowerPointが開いていない場合、選択がキャンセルされた場合はNULLを返す
+  //
+  FUNCTION CHOICEPRESENTATION()
+    DIM app = GET()
+    DIM files[0]
+    COM_ERR_IGN
+    DIM count = GETOLEITEM( app.presentations )
+    COM_ERR_RET
+    IFB count <= 0 OR COM_ERR_FLG THEN
+      RESULT = NULL
+    ELSE
+      RESIZE(files, count)
+      FOR i = 0 TO count - 1
+        files[i] = ALL_OLE_ITEM[i].name
+      NEXT
+      // ファイルを選択
+      DIM file = SLCTBOX(SLCT_CMB + SLCT_STR, 0, "ファイルを選択", files)
+
+      IF file = "-1" THEN RESULT = NULL ELSE RESULT = app.presentations(file)
+    ENDIF
+  FEND
+
+  //
+  // プレゼンテーションの中からセクションを選択する
+  // presentation…セクションを検索するプレゼンテーションファイル
+  // 戻り値…選択されたセクションのインデックス
+  //   セクションが無い場合は-1、選択がキャンセルされた場合は-2を返す
+  //
+  FUNCTION CHOICESECTION(presentation)
+    DIM sections[0]
+    DIM count = presentation.sectionProperties.count
+    IFB count <= 0 THEN
+      RESULT = -1
+    ELSE
+      RESIZE(sections, count)
+      FOR i = 1 TO count
+        sections[i] = presentation.sectionProperties.name(i)
+      NEXT
+      // セクションを選択
+      DIM sel = SLCTBOX(SLCT_CMB + SLCT_NUM, 0, "セクションを選択", sections)
+
+      IF sel = "-1" THEN RESULT = -2 ELSE RESULT = sel
+    ENDIF
+    
+  FEND
+ENDMODULE

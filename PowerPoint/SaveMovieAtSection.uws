@@ -1,0 +1,29 @@
+//
+// 指定ファイル内の選択したセクションを抜き出し、動画として保存
+//
+CALL PPT.uws
+DIM app = PPT.GET()
+
+// プレゼンテーション・セクションを選択
+DIM file = PPT.CHOICEPRESENTATION()
+
+IF file = NULL THEN EXIT
+DIM index = PPT.CHOICESECTION(file) + 1
+IF index <= 0 THEN EXIT
+// 最初と最後のスライド番号を取得
+DIM first = file.sectionProperties.firstSlide(index)
+DIM count = file.sectionProperties.slidesCount(index)
+DIM name = file.sectionProperties.name(index)
+DIM last = first + count - 1
+PRINT "Pickup:" + first + " TO " + last
+// コピー
+DIM newppt = app.presentations.add(TRUE)
+DIM r = SAFEARRAY(1, count)
+FOR i = 1 TO count
+  r[i] = first + i - 1
+NEXT
+file.slides.range(r).copy()
+newppt.slides.paste()
+//
+newppt.createVideo(GET_CUR_DIR + "\" + name + ".mp4", -1)
+PRINT name + ".mp4 Save End!"
