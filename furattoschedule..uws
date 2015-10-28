@@ -52,6 +52,7 @@ FOR i = 0 TO GETOLEITEM( doc.tables ) - 1
     WHILE text <> ""
       DIM tok = TRIM(regtok(PATTERN_LIST_TIME, text))
       DIM event = removespaces(regreplace(tok, "", PATTERN_LIST_TIME))
+      IF event = "" THEN CONTINUE
       PRINT event
       PRINT LOG_SEPARATOR
       DIM info = find_event_info(doc, event)
