@@ -1,7 +1,7 @@
 CONST PATTERN_LIST_TIME = "[0-9０-９]{1,2}:[0-9０-９]{2}\s*(～|集合)"
 CONST PATTERN_TIMETEXT = "[0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?～[0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?"
 CONST PATTERN_PLACE_TIME = "集合[ 　]*[:：]([0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?)?[ 　]*([^ 　\r\n]+)"
-CONST PATTERN_TIME = "(\d{1,2})時(半|\d{1,2}分)?"
+CONST PATTERN_TIME = "(\d{1,2}):(半|\d{1,2}分)?"
 CONST PATTERN_MAILADDR = "[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
 CONST PATTERN_TELEPHONE = "[0-9０-９]{2,4}-[0-9０-９]{2,4}-[0-9０-９]{4}"
 CONST PLACE_DEFAULT = "ふらっとステーション・とつか"
@@ -42,69 +42,71 @@ FPUT(fid, "Subject", row, 5)
 FPUT(fid, "Location", row, 6)
 FPUT(fid, "Description", row, 7)
 // テーブル走査
-FOR i = 0 TO GETOLEITEM( doc.tables ) - 1
-  DIM table = ALL_OLE_ITEM[i]
-  FOR l = 1 TO table.rows.count
-    DIM date = STRCONV(TRIM(table.rows[l].cells[1].range.text), SC_HALFWIDTH)
-    DIM w = TRIM(table.rows[l].cells[2].range.text)
-    IF w = "木" THEN CONTINUE
-    DIM text = TRIM(table.rows[l].cells[3].range.text)
-    WHILE text <> ""
-      DIM tok = TRIM(regtok(PATTERN_LIST_TIME, text))
-      DIM event = removespaces(regreplace(tok, "", PATTERN_LIST_TIME))
-      IF event = "" THEN CONTINUE
-      PRINT event
-      PRINT LOG_SEPARATOR
-      DIM info = find_event_info(doc, event)
-      DIM sttime = ""
-      DIM edtime = ""
-      DIM detail = ""
-      DIM place = ""
-      IFB info = "" THEN
-        PRINT "詳細文が見つかりません"
-        sttime = INPUT(event + "の詳細文が見つかりませんでした。開始時刻を入力してください")
-        IF sttime = EMPTY THEN BREAK 3
-        edtime = INPUT(event + "の詳細文が見つかりませんでした。終了時刻を入力してください")
-        IF edtime = EMPTY THEN BREAK 3
-        detail = INPUT(event + "の詳細文が見つかりませんでした。詳細文を入力してください")
-        IF detail = EMPTY THEN BREAK 3
-        place = INPUT(event + "の詳細文が見つかりませんでした。場所を入力してください", PLACE_DEFAULT)
-        IF place = EMPTY THEN BREAK 3
+FOR i = 1 TO doc.tables.count
+  DIM table = doc.tables[i]
+  FOR l = 1 TO table.range.cells.count
+    DIM date
+    DIM text
+    DIM time
+    DIM r = table.range
+    DIM t = TRIM(r.cells[l].range.text)
+  	SELECT r.cells[l].columnIndex
+  	CASE 1
+  	  date = STRCONV(t, SC_HALFWIDTH)
+  	CASE 3
+      text = t
+    CASE 4
+      time = SPLIT(t, "～")
+    SELEND
+    IF r.cells[l].columnIndex <> 4 THEN CONTINUE
+    // データ化
+    IF text = "" THEN CONTINUE
+    IF text = "定休日" THEN CONTINUE
+    m = regexecute("^([^□]*)(.*)", text)
+    event = m.item[0].subMatches[0]
+    text = m.item[0].subMatches[1]
+    PRINT event
+    PRINT LOG_SEPARATOR
+    DIM info = text
+    DIM sttime = ""
+    DIM edtime = ""
+    DIM detail = ""
+    DIM place = ""
+    sttime = normalizetime(time[0])
+    edtime = normalizetime(time[1])
+    IFB info = "" THEN
+      PRINT "詳細文が見つかりません"
+      detail = ""
+      place = PLACE_DEFAULT
+    ELSE
+      PRINT "詳細文が見つかりました"
+      detail = info
+      DIM pm = regexecute(PATTERN_PLACE_TIME, detail)
+      IFB pm.count > 0 THEN
+        place = TRIM(pm.item[0].subMatches[2])
+        IF STRCONV(place, SC_HALFWIDTH) = "ふらっとST" THEN place = PLACE_DEFAULT
       ELSE
-        PRINT "詳細文が見つかりました"
-        DIM m = regexecute(PATTERN_TIMETEXT, info);
-        IF m.count = 0 THEN CONTINUE
-        DIM time = SPLIT(m.item[0].value, "～")
-        sttime = normalizetime(time[0])
-        edtime = normalizetime(time[1])
-        detail = TRIM(COPY(info, POS(event, info) + 1 + LENGTH(event)))
-        DIM pm = regexecute(PATTERN_PLACE_TIME, detail)
-        IFB pm.count > 0 THEN
-          place = TRIM(pm.item[0].subMatches[2])
-          IF STRCONV(place, SC_HALFWIDTH) = "ふらっとST" THEN place = PLACE_DEFAULT
-        ELSE
-          place = PLACE_DEFAULT
-        ENDIF
+        place = PLACE_DEFAULT
       ENDIF
-      // 電話番号・メールアドレス削除
-      detail = regreplace(regreplace(detail, "", PATTERN_MAILADDR), "", PATTERN_TELEPHONE)
-      
-      PRINT sttime + "～" + edtime
-      PRINT detail
-      PRINT place
-      PRINT ""
-      
-      // 出力
-      DIM d = G_TIME_YY4 + "/" + (G_TIME_MM + 1) + "/" + date
-      row = row + 1
-      FPUT(fid, d, row, 1)
-      FPUT(fid, sttime, row, 2)
-      FPUT(fid, d, row, 3)
-      FPUT(fid, edtime, row, 4)
-      FPUT(fid, "<#DBL>" + event + "<#DBL>", row, 5)
-      FPUT(fid, "<#DBL>" + place + "<#DBL>", row, 6)
-      FPUT(fid, "<#DBL>" + detail + "<#DBL>", row, 7)
-    WEND
+    ENDIF
+    // 電話番号・メールアドレス削除
+    detail = regreplace(regreplace(detail, "", PATTERN_MAILADDR), "", PATTERN_TELEPHONE)
+    
+    PRINT sttime + "～" + edtime
+    PRINT detail
+    PRINT place
+    PRINT ""
+    
+    // 出力
+    DIM d = G_TIME_YY4 + "/" + (G_TIME_MM + 1) + "/" + date
+    row = row + 1
+    FPUT(fid, d, row, 1)
+    FPUT(fid, sttime, row, 2)
+    FPUT(fid, d, row, 3)
+    FPUT(fid, edtime, row, 4)
+    FPUT(fid, "<#DBL>" + event + "<#DBL>", row, 5)
+    FPUT(fid, "<#DBL>" + place + "<#DBL>", row, 6)
+    FPUT(fid, "<#DBL>" + detail + "<#DBL>", row, 7)
   NEXT
 NEXT
 
@@ -119,32 +121,21 @@ FUNCTION removespaces(text)
 FEND
 
 ///
-/// イベント情報をテキストエリアから探す
-///
-FUNCTION find_event_info(doc, name)
-  FOR i = 1 TO doc.shapes.count
-    DIM shape = doc.shapes[i]
-    IF shape.textframe.hastext = FALSE THEN CONTINUE
-    DIM text = shape.textframe.textrange.text
-    IFB POS(name, removespaces(text)) <> 0 THEN
-      RESULT = text
-      BREAK
-    ENDIF
-  NEXT
-FEND
-
-///
 /// 文字列形式の時刻表記をGoogleカレンダーの時刻表記に変換
 ///
 FUNCTION normalizetime(time)
   DIM s = STRCONV(time, SC_HALFWIDTH)
   DIM m = regexecute(PATTERN_TIME, s)
-  DIM h = m.item[0].subMatches[0]
-  DIM n = m.item[0].subMatches[1]
-  IF n = "半" THEN n = "30"
-  IF n = "" THEN n = "00"
-  PRINT h + ":" + n
-  RESULT = h + ":" + n
+  IFB m.count > 0 THEN
+    DIM h = m.item[0].subMatches[0]
+    DIM n = m.item[0].subMatches[1]
+    IF n = "半" THEN n = "30"
+    IF n = "" THEN n = "00"
+    PRINT h + ":" + n
+    RESULT = h + ":" + n
+  ELSE
+    RESULT = ""
+  ENDIF
 FEND
 
 ///
