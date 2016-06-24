@@ -1,7 +1,7 @@
 CONST PATTERN_LIST_TIME = "[0-9０-９]{1,2}:[0-9０-９]{2}\s*(～|集合)"
 CONST PATTERN_TIMETEXT = "[0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?～[0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?"
 CONST PATTERN_PLACE_TIME = "集合[ 　]*[:：]([0-9０-９]{1,2}時(半|[0-9０-９]{1,2}分)?)?[ 　]*([^ 　\r\n]+)"
-CONST PATTERN_TIME = "(\d{1,2}):(半|\d{1,2}分)?"
+CONST PATTERN_TIME = "(\d{1,2}):?(半|\d{1,2}分?)?"
 CONST PATTERN_MAILADDR = "[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*"
 CONST PATTERN_TELEPHONE = "[0-9０-９]{2,4}-[0-9０-９]{2,4}-[0-9０-９]{4}"
 CONST PLACE_DEFAULT = "ふらっとステーション・とつか"
