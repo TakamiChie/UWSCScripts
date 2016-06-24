@@ -32,7 +32,7 @@ IF file = "-1" THEN EXITEXIT
 // ドキュメントファイルを開く
 DIM doc = word.documents(file)
 
-DIM fid = FOPEN(fso.buildPath(GET_CUR_DIR, "import.csv"), F_WRITE)
+DIM fid = FOPEN(fso.buildPath(GET_CUR_DIR, "import.csv"), F_WRITE1)
 DIM row = 1
 FPUT(fid, "Start Date", row, 1)
 FPUT(fid, "Start Time", row, 2)
