@@ -1,0 +1,22 @@
+//
+// Audacityでノイズ除去を行う
+// あらかじめノイズだけの部分を選択しておくこと
+//
+DIM a = GETID("Audacity", "wxWindowClassNR", 1)
+IFB a = -1 THEN
+  MSGBOX("Audacity Not Found")
+  EXIT
+ENDIF
+CLKITEM(a, "編集\選択範囲を保存")
+CLKITEM(a, "エフェクト\ノイズの除去")
+CLKITEM(GETID("ノイズの除去"), "ノイズプロファイルの取得")
+SLEEP(1)
+CLKITEM(a, "編集\カーソルの移動\トラックの最初")
+CLKITEM(a, "編集\選択\カーソルから最後まで")
+CLKITEM(a, "エフェクト\ノイズの除去")
+CLKITEM(GETID("ノイズの除去"), "OK")
+WHILE GETID("Noise Reduction", "", 0.1) = -1
+  SLEEP(1)
+WEND
+SLEEP(1)
+CLKITEM(a, "編集\選択範囲を復帰")
