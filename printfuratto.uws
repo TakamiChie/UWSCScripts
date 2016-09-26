@@ -1,0 +1,35 @@
+CONST _SAVEDIR = "C:\temp\"
+
+IF MSGBOX("Adobe Reader DCにてわくわくだよりのPDFを二つとも開いてください。<#CR>準備はよろしいですか？", BTN_OK or BTN_CANCEL) = BTN_CANCEL THEN EXIT
+DELETEFILE( _SAVEDIR + "*")
+DIM idaar = GETID("Adobe Acrobat Reader DC")
+IF idaar = -1 THEN ERROR("Acrobat Readerの検出に失敗")
+ACW(Idaar)
+SAVETOPDF(idaar, "14.pdf")
+SCKEY(idaar,  VK_CTRL, VK_TAB)
+SAVETOPDF(idaar, "23.pdf")
+
+PROCEDURE SAVETOPDF(idaar, name)
+  SCKEY(idaar,  VK_CTRL, VK_P)
+  // 印刷ダイアログ
+  DIM idprint = GETID("印刷")
+  IF idprint = -1 THEN ERROR("印刷ダイアログの検出に失敗")
+  
+  ACW(idprint)
+  IF CLKITEM(idprint, "Microsoft Print to PDF") = FALSE THEN ERROR("コンボボックスコントロールの選択に失敗")
+  IF CLKITEM(idprint, "ポスター") = FALSE THEN ERROR("ポスターボタンコントロールの選択に失敗")
+  SENDSTR(idprint, "99.9", 2, TRUE)
+  SLEEP(1)
+  IF CLKITEM(idprint, "印刷") = FALSE THEN ERROR("印刷ボタンコントロールの選択に失敗")
+  SLEEP(2)
+  DIM idsavedlg = GETID("印刷結果を名前を付けて保存","#32770")
+  IF idsavedlg = -1 THEN ERROR("保存ダイアログの検出に失敗")
+  SENDSTR(idsavedlg, _SAVEDIR + name, 2, TRUE)
+  IF CLKITEM(idsavedlg, "保存") = FALSE THEN ERROR("保存ボタンコントロールの選択に失敗")
+  SLEEP(10)
+FEND
+
+PROCEDURE ERROR(msg)
+  MSGBOX(msg)
+  EXITEXIT
+FEND
