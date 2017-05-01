@@ -2,5 +2,5 @@ id = GETID("Twitter", "ApplicationFrameWindow")
 mid = STATUS(id, ST_MONITOR)
 mw = MONITOR(mid, MON_WIDTH)
 mh = MONITOR(mid, MON_HEIGHT)
-ACW(id,mw - 400,40,400,mh,0)
+ACW(id,mw - 400,40,400,mh - 40,0)
 
