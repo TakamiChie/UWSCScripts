@@ -1,0 +1,66 @@
+///
+/// 任意のOneNote記事をEvernoteの指定記事に複写するスクリプト
+/// 〇前提条件
+/// ・OneNoteデスクトップ版を起動し、OneNoteのコピーしたい記事を表示していること
+/// ・OneNoteストアアプリ版を起動していないこと
+/// ・InternetExplorerでEvernoteにログインしていること
+/// 〇スクリプト引数
+/// ・Evernoteの記事表示用URL。自分のアカウントの記事であること
+///
+DIM URL
+IFB PARAM_STR[0] = "" THEN
+  MSGBOX("Evernote URLを引数に指定してください")
+  EXIT
+ELSE
+  URL = PARAM_STR[0]
+ENDIF
+PRINT "> OneNoteから文章をコピーします"
+DIM idone = GETID("OneNote")
+SCKEY(idone, VK_CTRL, VK_A)
+SCKEY(idone, VK_CTRL, VK_A)
+SCKEY(idone, VK_CTRL, VK_C)
+
+PRINT "> Evernoteに文章をコピーします"
+DIM ie = CREATEOLEOBJ("InternetExplorer.Application")
+DIM idie = GETID("Internet Explorer","IEFrame")
+
+ie.Visible = true
+ACW(idie)
+SLEEP(3)
+IE_Navigate(ie, URL)
+IFB ie.document.querySelector(".single-note-page-wrapper > div > div > div > a:first-child").style.display = "none" THEN
+  MSGBOX("InternetExplorerでEvernoteにログインしてください。<#CR>ログインできたらOKをクリックしてください")
+  IE_Navigate(ie, URL)
+ENDIF
+PRINT "> 編集用ページを開いています"
+ie.document.querySelector(".single-note-page-wrapper > div > div > div > a:first-child").click()
+SLEEP(3)
+IE_BusyWait(ie)
+SLEEP(6)
+
+PRINT "> 編集の準備をしています"
+ie.document.querySelector("#gwt-debug-NoteContentEditorView-root").click()
+SLEEP(1)
+SCKEY(idie, VK_CTRL, VK_A)
+SLEEP(1)
+SCKEY(idie, VK_CTRL, VK_V)
+SLEEP(1)
+PRINT "> 書き込みの準備をしています"
+ie.document.querySelector("#gwt-debug-NoteAttributes-doneButton").click()
+SLEEP(1)
+IE_BusyWait(ie)
+PRINT "> 書き込みが完了しました"
+SLEEP(3)
+ie.quit()
+
+PROCEDURE IE_Navigate(ie, url)
+  ie.navigate(url)
+  IE_BusyWait(ie)
+FEND
+
+PROCEDURE IE_BusyWait(ie)
+　REPEAT
+　　SLEEP(0.2)
+　UNTIL (! ie.busy) AND (ie.readyState=4)
+FEND
+
