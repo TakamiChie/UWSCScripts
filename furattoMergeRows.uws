@@ -1,0 +1,20 @@
+CALL Modules\Excel
+DIM xl = Excel.GETEXCEL()
+DIM wb = Excel.CHOICEFILE()
+IF wb = NULL THEN EXIT
+DIM sheet = wb.sheets(1)
+PUBLIC prevday
+Excel.EACHROWS(sheet.cells(1, 1).currentRegion, "rows", TRUE)
+
+FUNCTION rows(row, no)
+  IF row.cells(1).mergeCells THEN
+    row.cells(1).mergeCells = FALSE
+  ENDIF
+  IF row.cells(1).value <> "" THEN
+    prevday = row.cells(1).value
+    MSGBOX(prevday)
+  ELSE
+    row.cells(1).value = prevday
+  ENDIF
+  RESULT = TRUE
+FEND
