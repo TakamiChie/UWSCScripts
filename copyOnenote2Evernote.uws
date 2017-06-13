@@ -15,7 +15,7 @@ ELSE
   URL = PARAM_STR[0]
 ENDIF
 PRINT "> OneNoteから文章をコピーします"
-DIM idone = GETID("OneNote")
+DIM idone = GETID("OneNote", "Framework::CFrame")
 SCKEY(idone, VK_CTRL, VK_A)
 SCKEY(idone, VK_CTRL, VK_A)
 SCKEY(idone, VK_CTRL, VK_C)
