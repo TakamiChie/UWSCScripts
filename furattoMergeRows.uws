@@ -8,7 +8,7 @@ IF xl = NULL THEN
 ENDIF
 DIM wb = Excel.CHOICEFILE()
 IF wb = NULL THEN EXIT
-DIM sheet = wb.sheets(1)
+DIM sheet = Excel.CHOICESHEET(wb)
 PUBLIC prevday
 PUBLIC prevweek
 PUBLIC skiprow = 0
