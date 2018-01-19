@@ -1,0 +1,12 @@
+CONST w = 16
+CONST h = 9
+DIM s  = ""
+DIM id = GETID(GET_FROMPOINT_WIN)
+FOR i = 140 TO 60 STEP -2
+  s = s + (i * w) + "x" + (i * h) + ","
+NEXT
+DIM n = SLCTBOX(SLCT_CMB + SLCT_NUM, 0, STATUS(id, ST_TITLE) +"をどのサイズに変更する？", SPLIT(s, ",", TRUE))
+IF n <> -1 THEN
+  DIM nn = 140 - n * 2
+  ACW(id, STATUS(id, ST_X), STATUS(id, ST_Y), nn * w, nn * h)
+ENDIF
