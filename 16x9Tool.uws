@@ -1,6 +1,12 @@
 CONST w = 16
 CONST h = 9
 DIM s  = ""
+SELECT SLCTBOX(SLCT_BTN, 10, "10秒後にマウス下にあるウィンドウをリサイズします", "OK(すぐに実行)", "キャンセル")
+CASE SLCT_2
+  EXIT
+CASE -1
+  EXIT
+SELEND
 DIM id = GETID(GET_FROMPOINT_WIN)
 FOR i = 140 TO 60 STEP -2
   s = s + (i * w) + "x" + (i * h) + ","
